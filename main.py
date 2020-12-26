@@ -5,7 +5,8 @@ Windows script to generate ZX Spectrum keyboard type keystroke typed-in animatio
 2. you will need these modules:
    pip install pillow
    pip install colour
-3. Modify constants as needed
+3. Modify constants as needed marked with todo:
+4. install ffmpeg (and add it in your path)
 
 """
 from PIL import Image, ImageFont, ImageDraw
@@ -14,9 +15,10 @@ from math import fabs
 import subprocess
 import os
 import re
-
+# todo: specify your font here
 spectrum_font = r"C:\\Users\\zapho\\AppData\\Local\\Microsoft\\Windows\\Fonts\\zxspeckb_solid.otf"
-
+# todo: you can hardcode the path if you want
+ffmpeg_exe = "ffmpeg.exe"
 
 class Rectangle:
     def __init__(self, x1, y1, x2, y2):
@@ -49,12 +51,14 @@ def hex_to_rgb(value):
 
 
 def get_bounding_box(font, point_size, string):
-    h = point_size * 2
+    """Calculates the bounding box of the text by drawing it into a empty bitmap.
+    Trailing spaces do not count!"""
+    h = point_size * 2  # make sure bitmap is never zero width
     w = h + h*len(string)
     img = Image.new('RGB', (w, h), color=(0, 0, 0))
     d = ImageDraw.Draw(img)
 
-    d.text((1, 1), string, font=font, fill=(255, 255, 255))
+    d.text((1, 1), string, font=font, fill="white")
     dims = img.getbbox()
     if dims is None:  # zero length or a nonprintable
         return Rectangle(0, 0, 0, 0)
@@ -63,9 +67,11 @@ def get_bounding_box(font, point_size, string):
 
 def gradient(image, start, end):
     w = image.width
+    # not well optimised, but use the colour library to get a half-decent gradient.
+    # Getting this perfect is not helpful since we compress the images anyway.
     colors = list(Color(rgb_to_hex(*start)).range_to(Color(rgb_to_hex(*end)), w))
     pen = ImageDraw.Draw(image)
-    for x in range(0,w):
+    for x in range(0, w):
         pen.line((x, 0, x, image.height), hex_to_rgb(str(colors[x])))
 
 
@@ -75,6 +81,8 @@ def purge(directory, pattern):
             os.remove(os.path.join(directory, f))
 
 
+# todo: change the banner height here if needed
+# todo: change the starting and ending colours if desired
 def save_image_animation(message_string,
                          height=90,
                          gradient_left_color=(27, 40, 56),   # Steam UI dark scheme
@@ -120,13 +128,14 @@ def save_image_animation(message_string,
 
 
 if __name__ == '__main__':
-    # output image files
+    # todo: Change the message to write to the animated banner
     message = 'Shooting'
+    # todo: Comment this line out for fonts with capitals
     message = message.swapcase()  # makes the spectrum font look better
     save_image_animation(message)
 
     # convert to avi: ffmpeg -f image2 -i text%d.jpg video.avi
-    command = ['ffmpeg.exe', '-f', 'image2', '-framerate', '4', '-i', 'text%02d.jpg', '-y', 'video.avi']
+    command = [ffmpeg_exe, '-f', 'image2', '-framerate', '4', '-i', 'text%02d.jpg', '-y', 'video.avi']
     print(command)
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
     process.wait()
@@ -135,7 +144,7 @@ if __name__ == '__main__':
     # use the message text as a filename
     # convert to animated gif using palette
     out_name = "".join([c for c in message.lower() if c.isalpha() or c.isdigit() or c == ' ']).rstrip()
-    command = ['ffmpeg.exe', '-i', 'video.avi', '-vf', "fps=10,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse",
+    command = [ffmpeg_exe, '-i', 'video.avi', '-vf', "fps=10,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse",
                '-loop', '0', '-y', f"{out_name}.gif"]
     print(" ".join(command))
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
