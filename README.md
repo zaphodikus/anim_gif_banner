@@ -37,6 +37,8 @@ Frame3
 
 * pip install colour
 
+Unless you have a font to use in mind, you can grab the font I used from [freefontsdownload.com](https://freefontsdownload.net/free-zxspectrumkeyboard-font-146171.htm) ZX-Spectrum Keyboard font .
+
 # Tweaks
 At various points in the script, you will see a TODO comment which allows customization.
 

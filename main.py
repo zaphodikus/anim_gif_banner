@@ -2,11 +2,12 @@
 Windows script to generate ZX Spectrum keyboard type keystroke typed-in animations.
 
 1. You will need to install the ZX spectrum font (creative commons, so not included)
-2. you will need these modules:
+   https://freefontsdownload.net/free-zxspectrumkeyboard-font-146171.htm
+2. install ffmpeg (and add it in your path)
+3. you will need these modules:
    pip install pillow
    pip install colour
-3. Modify constants as needed marked with todo:
-4. install ffmpeg (and add it in your path)
+4. Modify constants as needed wherever the code has a todo:
 
 """
 from PIL import Image, ImageFont, ImageDraw
@@ -17,7 +18,7 @@ import os
 import re
 # todo: specify your font here
 spectrum_font = r"C:\\Users\\zapho\\AppData\\Local\\Microsoft\\Windows\\Fonts\\zxspeckb_solid.otf"
-# todo: you can hardcode the path if you want
+# todo: you can hardcode the path if ffmpeg is not in your system path
 ffmpeg_exe = "ffmpeg.exe"
 
 class Rectangle:
@@ -91,6 +92,7 @@ def save_image_animation(message_string,
                          ):
     purge(os.getcwd(), "text.*.jpg")
     margin = int(height/10)
+    # fudge factor, depending on the font descenders and scaling, 1.2 seems to work well enough
     font_weight = int(height*1.2)
 
     fnt_basic = ImageFont.truetype(spectrum_font, font_weight, layout_engine=ImageFont.LAYOUT_BASIC)
@@ -99,6 +101,8 @@ def save_image_animation(message_string,
     # draw a gradient background
     img_background = Image.new('RGB', (width, height))
     gradient(img_background, gradient_left_color, gradient_right_color)
+    # depending on if the font has descenders, the cursor may need moving
+    # for a really retro ful size TTY cursor set cursor_start = 0
     cursor_start = cursor.height() - int(cursor.height()/8)
     cursor_end = cursor.height()
 
@@ -124,7 +128,6 @@ def save_image_animation(message_string,
     # duplicate the final frame for a few "frames"
     for i in range(1, 5):
         img.save(f"text{output+i:02}.jpg")
-
 
 
 if __name__ == '__main__':
