@@ -18,6 +18,9 @@ import os
 import re
 # todo: specify your font here
 spectrum_font = r"C:\\Users\\zapho\\AppData\\Local\\Microsoft\\Windows\\Fonts\\zxspeckb_solid.otf"
+garden_font = r"C:\\Users\\zapho\\AppData\\Local\\Microsoft\\Windows\\Fonts\\typogarden-demo.ttf"
+font_filename = garden_font
+
 # todo: you can hardcode the path if ffmpeg is not in your system path
 ffmpeg_exe = "ffmpeg.exe"
 
@@ -93,9 +96,9 @@ def save_image_animation(message_string,
     purge(os.getcwd(), "text.*.jpg")
     margin = int(height/10)
     # fudge factor, depending on the font descenders and scaling, 1.2 seems to work well enough
-    font_weight = int(height*1.2)
+    font_weight = int(height*1)
 
-    fnt_basic = ImageFont.truetype(spectrum_font, font_weight, layout_engine=ImageFont.LAYOUT_BASIC)
+    fnt_basic = ImageFont.truetype(font_filename, font_weight, layout_engine=ImageFont.LAYOUT_BASIC)
     width = get_bounding_box(fnt_basic, font_weight, message_string).width() + margin * 2
     cursor = get_bounding_box(fnt_basic, font_weight, message_string[0])
     # draw a gradient background
@@ -103,8 +106,8 @@ def save_image_animation(message_string,
     gradient(img_background, gradient_left_color, gradient_right_color)
     # depending on if the font has descenders, the cursor may need moving
     # for a really retro ful size TTY cursor set cursor_start = 0
-    cursor_start = cursor.height() - int(cursor.height()/8)
-    cursor_end = cursor.height()
+    cursor_start = margin  # cursor.height() - int(cursor.height()/8)
+    cursor_end = int(cursor.height()*1.4)
 
     # print the message one character at a time
     # output 2 files form each added char of the message, one is with a blinking cursor painted
@@ -112,7 +115,7 @@ def save_image_animation(message_string,
     for index in range(0, len(message_string) + 1):
         img = img_background.copy()
         d = ImageDraw.Draw(img)
-        d.text((margin, 0), message_string[:index], font=fnt_basic, fill=text_color)
+        d.text((margin, -10), message_string[:index], font=fnt_basic, fill=text_color)
         textwidth = get_bounding_box(fnt_basic, font_weight, message_string[:index]).width()
         if ' ' == message_string[index - 1]:  # draw cursor in correct position for non-printable characters
             textwidth += get_bounding_box(fnt_basic, font_weight, 'a').width()
@@ -132,10 +135,10 @@ def save_image_animation(message_string,
 
 if __name__ == '__main__':
     # todo: Change the message to write to the animated banner
-    message = 'Shooting'
+    message = 'Credits'
     # todo: Comment this line out for fonts with capitals
     message = message.swapcase()  # makes the spectrum font look better
-    save_image_animation(message)
+    save_image_animation(message, height=70)
 
     # convert to avi: ffmpeg -f image2 -i text%d.jpg video.avi
     command = [ffmpeg_exe, '-f', 'image2', '-framerate', '4', '-i', 'text%02d.jpg', '-y', 'video.avi']
